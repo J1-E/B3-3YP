@@ -1,3 +1,4 @@
+#anything after the underscore is subscript from the pubmed document
 #Glucose Values
 #Volumes are in dl
 V_BV=3.5
