@@ -80,3 +80,4 @@ f2=0
 #for Insulin and Glucose concentration it depends person to person but Ill use the average values
 GB_PV= 40 #micro U/ml so adjust based on other values
 IB_PV= 5.5 #mmol/L so adjust
+#check units throughout the code to make sure they are consistent
