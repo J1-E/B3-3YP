@@ -1,3 +1,10 @@
+import numpy as np
+import matplotlib.pyplot as plt 
+from scipy.integrate import solve_ivp
+from typing import Callable, Sequence
+
+# Default Parameters
+
 #anything after the underscore is subscript from the pubmed document
 #Glucose Values
 #Volumes are in dl
@@ -53,6 +60,58 @@ K=0.575 #U/min
 #Glucagon Values
 Vgamma=11310 #ml
 #gamma_B=input ["glucagon concentration"]
+
+## Insulin and glucagon ODEs (Eqs. 13-20 inclusive)
+
+def insulin_glucagon_odes(
+    t: float,
+    y: Sequence[float],
+    u1_func: Callable[[float], float],
+    u2_func: Callable[[float], float],
+    gh_func: Callable[[float], float],
+) -> np.ndarray:
+    """
+    Compute derivatives for insulin (7 states) + glucagon (1 state).
+
+    State vector y ordering:
+      y[0] I_B   (blood)
+      y[1] I_H   (heart/lungs)
+      y[2] I_G   (gut)
+      y[3] I_L   (liver)
+      y[4] I_K   (kidney)
+      y[5] I_PV  (peripheral vascular)
+      y[6] I_PI  (peripheral interstitial / infusion)
+      y[7] gamma (glucagon)
+
+    Inputs:
+      u1_func(t) -> U_1 (insulin infusion, mU/min)
+      u2_func(t) -> U_2 (glucagon infusion)
+      gh_func(t) -> GH (glucose in heart compartment, mg/dL or paper units)
+    """
+    # Unpack state variables
+    IB, IH, IG, IL, IK, IPV, IPI, gamma = y
+
+    # Evaluate inputs at time t
+    U1 = u1_func(t)
+    U2 = u2_func(t)
+    GH = gh_func(t)
+
+    # Compute Insulin derivatives
+        # All numerical constants lifted from the paper directly
+    dIB_dt = 1.73*(IH - IB)
+    dIH_dt = Q0*0.454*IB + 0.909*IL + 0.727*IK + 1.061*IPV - 3.151*IH
+    dIG_dt = 0.765*(IH - IG)
+    dIL_dt = 0.094*IH + 0.378*IG - 0.789*IL
+    dIK_dt = 1.411*IH - 1.8351*IK
+    dIPV_dt = 1.418*IH - 1.874*IPV + 0.455*IPI
+    dIPI_dt = 0.05*IPV - 0.111*IPI + U1
+
+    # Compute Glucagon derivative
+    dgamma_dt = -0.08*gamma - 0.00000069*GH + 0.0016*IH + U2
+
+    return np.array([dIB_dt, dIH_dt, dIG_dt, dIL_dt, dIK_dt, dIPV_dt, dIPI_dt, dgamma_dt])
+
+
 #Source and Sinks-Glucose in mg/min
 r_RBCU=10
 r_BGU=70
@@ -81,3 +140,4 @@ f2=0
 GB_PV= 40 #micro U/ml so adjust based on other values
 IB_PV= 5.5 #mmol/L so adjust
 #check units throughout the code to make sure they are consistent
+
