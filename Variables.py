@@ -52,7 +52,7 @@ beta=0.931 #min^-1
 K=0.575 #U/min
 #Glucagon Values
 Vgamma=11310 #ml
-gamma_B=[input glucagon concentration]
+gamma_B=input ["glucagon concentration"]
 #Source and Sinks-Glucose in mg/min
 r_RBCU=10
 r_BGU=70
@@ -80,3 +80,4 @@ f2=0
 #for Insulin and Glucose concentration it depends person to person but Ill use the average values
 GB_PV= 40 #micro U/ml so adjust based on other values
 IB_PV= 5.5 #mmol/L so adjust
+#check units throughout the code to make sure they are consistent
