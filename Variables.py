@@ -86,7 +86,7 @@ def insulin_glucagon_odes(
     Inputs:
       u1_func(t) -> U_1 (insulin infusion, mU/min)
       u2_func(t) -> U_2 (glucagon infusion)
-      gh_func(t) -> GH (glucose in heart compartment, mg/dL or paper units)
+      gh_func(t) -> GH (glucose in heart compartment, mg/dL)
     """
     # Unpack state variables
     IB, IH, IG, IL, IK, IPV, IPI, gamma = y
@@ -111,8 +111,8 @@ def insulin_glucagon_odes(
 
     return np.array([dIB_dt, dIH_dt, dIG_dt, dIL_dt, dIK_dt, dIPV_dt, dIPI_dt, dgamma_dt])
 
-
 #Source and Sinks-Glucose in mg/min
+## once josh writes glucode ode someone needs to turn these into another function that calculates these rates as instantaneous at each time step -lin
 r_RBCU=10
 r_BGU=70
 r_JGU=20
@@ -131,8 +131,8 @@ F_KIC=0.3
 F_PIC=0.15
 #Source and sinks- Glucagon
 r_MgammaC=9.1
-r_PgammaR=r_MgammaC*gamma
-r_PgammaR=MG_PgammaR*MI_PgammaR*rB_PgammaR
+# r_PgammaR=r_MgammaC*gamma ##why do we define r_PgammaR twice is it typo or like a recursive thing :'( -lin
+# r_PgammaR=MG_PgammaR*MI_PgammaR*rB_PgammaR
 MI_HGP=1
 MI_HGU=1
 f2=0
@@ -141,3 +141,26 @@ GB_PV= 40 #micro U/ml so adjust based on other values
 IB_PV= 5.5 #mmol/L so adjust
 #check units throughout the code to make sure they are consistent
 
+## Running a demo simulation
+if __name__ == "__main__":
+    # Minimal initial conditions 
+    IB0 = 5.5   # mU/ml (random initial IB to start the ode solving from) — @Tommy can you figure out what this is meant to be -lin
+    y0 = np.array([IB0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) # @Tommy here as well change initial values if needed -lin
+
+    # time horizon (paper often uses long sims; use 2000 min for full reproduction)
+    t_span = (0.0, 200.0)     # demo uses 200; change to (0.0, 2000.0) for full runs
+    t_eval = np.linspace(t_span[0], t_span[1], 401)
+
+    # inputs: no infusion in demo
+    u1 = lambda t: 0.0  # insulin infusion (mU/min)
+    u2 = lambda t: 0.0  # glucagon infusion (mg/min)
+
+    # GH: placeholder constant. @Tommy Replace GH(t) as needed
+    gh = lambda t: 140.0  # mg/dL placeholder
+
+    sol = solve_ivp(lambda tt, yy: insulin_glucagon_odes(tt, yy, u1, u2, gh),
+                    t_span=t_span, y0=y0, t_eval=t_eval, method="RK45",
+                    atol=1e-6, rtol=1e-6)
+
+    if not sol.success:
+        raise RuntimeError("Integration failed: " + str(sol.message))
